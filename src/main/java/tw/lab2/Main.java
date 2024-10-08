@@ -1,18 +1,22 @@
 package tw.lab2;
 
-public class Main {
+
+public class Main{
     public static void main(String[] args) {
-        Variable v = new Variable();
-        Th th = new Th(true, v);
-        for (int i = 0; i < 10; i++) {
-            Thread t = new Thread(th);
-            t.start();
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        int x = 2; // ilosc watkow
+        int y = 1000; // ilosc petli
+        Bufor v = new Bufor(0);
+        Th[] threads = new Th[x];
+        for (int i = 0; i < x; i++) {
+            Th t1 = new Th(i % 2 == 0, v, y);
+            threads[i] = t1;
+            t1.start();
         }
-        System.out.println(v.getValue());
+        for (int i = 0; i < x; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException ignored) { }
+        }
+        System.out.println(v.getX());
     }
 }

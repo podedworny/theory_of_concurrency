@@ -2,8 +2,8 @@ package tw.lab1;
 
 public class Main{
     public static void main(String[] args) {
-        int x = 100000;
-        int y = 1;
+        int x = 2; // ilosc watkow
+        int y = 500000; // ilosc petli
         Variab v = new Variab(0);
         ThreadExample[] threads = new ThreadExample[x];
         for (int i = 0; i < x; i++) {

@@ -8,7 +8,7 @@ public class Variab {
     public synchronized void increment(){
         x++;
     }
-    public int getX(){
+    public synchronized int getX(){
         return x;
     }
     public synchronized void decrement(){
