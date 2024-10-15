@@ -1,12 +1,12 @@
 package tw.lab2;
 
 public class Th extends Thread{
-    boolean status;
-    Bufor v;
+    boolean status; // true - producer, false - consumer
+    Bufor bufor;
     int count;
-    public Th (boolean status, Bufor v, int count){
+    public Th (boolean status, Bufor bufor, int count){
         this.status = status;
-        this.v = v;
+        this.bufor = bufor;
         this.count = count;
     }
 
@@ -14,12 +14,12 @@ public class Th extends Thread{
     public void run() {
         if (status) {
             for (int i = 0; i < count; i++) {
-                v.increment();
+                bufor.produce(i);
 
             }
         } else {
             for (int i = 0; i < count; i++) {
-                v.decrement();
+                bufor.consume();
             }
         }
     }

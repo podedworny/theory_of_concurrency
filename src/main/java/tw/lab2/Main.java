@@ -3,20 +3,26 @@ package tw.lab2;
 
 public class Main{
     public static void main(String[] args) {
-        int x = 2; // ilosc watkow
-        int y = 1000; // ilosc petli
-        Bufor v = new Bufor(0);
-        Th[] threads = new Th[x];
-        for (int i = 0; i < x; i++) {
-            Th t1 = new Th(i % 2 == 0, v, y);
-            threads[i] = t1;
-            t1.start();
+        int consumer_count = 3;
+        int producer_count = 2;
+        int sum = consumer_count + producer_count;
+        int buffer_size = 100;
+        int products_count = 10;
+
+        Bufor bufor = new Bufor(buffer_size);
+        Th[] threads = new Th[consumer_count + producer_count];
+
+        for (int i = 0; i < sum; i++) {
+            Th thread = new Th(i < producer_count, bufor, products_count);
+            threads[i] = thread;
+            thread.start();
         }
-        for (int i = 0; i < x; i++) {
+
+        for (int i = 0; i < sum; i++) {
             try {
                 threads[i].join();
             } catch (InterruptedException ignored) { }
         }
-        System.out.println(v.getX());
+        System.out.println(bufor.getX());
     }
 }
