@@ -10,30 +10,58 @@ public class Buffer {
     private final Queue<Integer> queue;
     private final int buffer_size;
     private final Lock lock = new ReentrantLock();
-    private final Condition prod = lock.newCondition();
     private final Condition cons = lock.newCondition();
-
-    public Buffer(int buffer_size) {
+    private final Condition prod = lock.newCondition();
+    public Buffer(int buffer_size){
         this.queue = new LinkedList<>();
         this.buffer_size = buffer_size;
     }
-
-    public void produce(int x, int thread_id){
+    public void produce(int x){
         lock.lock();
         try {
-            while (queue.size() + x > buffer_size){
-                prod.await();
+            while (queue.size() + x > buffer_size) {
+                try {
+                    prod.await();
+                } catch (Exception ignored) {
+                }
             }
-            System.out.println("Producer " + thread_id + " produced " + x + " products");
-            for (int i=0; i<x; i++) queue.add(x);
-            prod.signal();
+            for (int i=0; i<x;i++) queue.add(x);
+            System.out.println(queue.size());
             cons.signal();
-
         }
         catch (Exception ignored) {}
         finally {
             lock.unlock();
         }
     }
-
+    public int getX(){
+        int rer = 0;
+        lock.lock();
+        try {
+            rer = queue.size();
+        }
+        catch (Exception ignored) {}
+        finally {
+            lock.unlock();
+        }
+        return rer;
+    }
+    public void consume(int x){
+        lock.lock();
+        try {
+            while (queue.size() < x) {
+                try {
+                    cons.await();
+                } catch (Exception ignored) {
+                }
+            }
+            for (int i=0; i<x; i++)  queue.poll();
+            System.out.println(queue.size());
+            prod.signal();
+        }
+        catch (Exception ignored) {}
+        finally {
+            lock.unlock();
+        }
+    }
 }

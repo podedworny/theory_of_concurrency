@@ -1,21 +1,19 @@
 package tw.lab3;
 
-import tw.lab2_d.Buffer;
-import tw.lab2_d.Th;
 
 public class Main{
     public static void main(String[] args) {
-        int consumer_count = 3;
-        int producer_count = 3;
+        int consumer_count = 1;
+        int producer_count = 2;
         int sum = consumer_count + producer_count;
-        int products_count = 10;
-        int M = 10;
+        int buffer_size = 100;
+        int products_count = 100;
 
-        tw.lab2_d.Buffer buffer = new Buffer(2 * M);
-        tw.lab2_d.Th[] threads = new tw.lab2_d.Th[consumer_count + producer_count];
+        Buffer buffer = new Buffer(2*buffer_size);
+        Th[] threads = new Th[consumer_count + producer_count];
 
         for (int i = 0; i < sum; i++) {
-            tw.lab2_d.Th thread = new Th(i < producer_count, buffer, products_count, M);
+            Th thread = new Th(i < producer_count, buffer, buffer_size);
             threads[i] = thread;
             thread.start();
         }
@@ -25,5 +23,6 @@ public class Main{
                 threads[i].join();
             } catch (InterruptedException ignored) { }
         }
+        System.out.println(buffer.getX());
     }
 }
