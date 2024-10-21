@@ -1,9 +1,11 @@
 package tw.lab2;
+import java.util.Random;
 
 public class Th extends Thread{
     boolean status; // true - producer, false - consumer
     Bufor bufor;
     int count;
+    Random random = new Random();
     public Th (boolean status, Bufor bufor, int count){
         this.status = status;
         this.bufor = bufor;
@@ -13,13 +15,13 @@ public class Th extends Thread{
     @Override
     public void run() {
         if (status) {
-            for (int i = 0; i < count; i++) {
-                bufor.produce(i);
+            for (;;) {
+                bufor.produce(random.nextInt(count)+1);
 
             }
         } else {
-            for (int i = 0; i < count; i++) {
-                bufor.consume();
+            for (;;) {
+                bufor.consume(random.nextInt(count)+1);
             }
         }
     }
