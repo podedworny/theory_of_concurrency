@@ -1,6 +1,8 @@
 package tw.lab3;
 
 
+import java.util.concurrent.TimeUnit;
+
 public class Main{
     public static void main(String[] args) {
         int consumer_count = 1;
@@ -18,11 +20,28 @@ public class Main{
             thread.start();
         }
 
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        }
+        catch (Exception ignored) {}
+        int[] arr = new int[sum];
+        for (int i=0; i<sum;i++){
+            threads[i].running = false;
+            arr[i] = threads[i].count;
+        }
         for (int i = 0; i < sum; i++) {
             try {
                 threads[i].join();
             } catch (InterruptedException ignored) { }
         }
-        System.out.println(buffer.getX());
+        for (int i=0; i<sum;i++){
+            if (i < producer_count){
+                System.out.println("Producer " + i + " produced " + threads[i].count);
+            }
+            else {
+                System.out.println("Consumer " + i + " consumed " + threads[i].count);
+
+            }
+        }
     }
 }

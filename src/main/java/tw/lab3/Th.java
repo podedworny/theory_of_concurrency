@@ -8,6 +8,7 @@ public class Th extends Thread{
     Buffer buffer;
     int count;
     Random random = new Random();
+    boolean running = true;
     public Th (boolean status, Buffer buffer, int count){
         this.status = status;
         this.buffer = buffer;
@@ -17,12 +18,12 @@ public class Th extends Thread{
     @Override
     public void run() {
         if (status) {
-            for (;;) {
+            while (running) {
                 buffer.produce(random.nextInt(count)+1);
 
             }
         } else {
-            for (;;) {
+            while (running) {
                 buffer.consume(random.nextInt(count)+1);
             }
         }

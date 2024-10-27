@@ -20,7 +20,9 @@ public class Buffer {
     public void produce(int x, int thread_id){
         lock.lock();
         try {
-            while (lock.hasWaiters(first_prod)) next_prod.await();
+            while (lock.hasWaiters(first_prod)) {
+                next_prod.await();
+            }
             while (queue.size() + x > buffer_size){
                 first_prod.await();
             }
@@ -37,7 +39,9 @@ public class Buffer {
     public void consume(int x, int thread_id){
         lock.lock();
         try {
-            while (lock.hasWaiters(first_cons)) next_cons.await();
+            while (lock.hasWaiters(first_cons)) {
+                next_cons.await();
+            }
             while (queue.size() < x){
                 first_cons.await();
             }

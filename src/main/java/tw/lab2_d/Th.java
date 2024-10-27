@@ -9,7 +9,9 @@ public class Th extends Thread{
     int max_prod;
     Random random = new Random();
     static int id = 0;
+    public int count = 0;
     private final int thread_id = id++;
+    boolean running = true;
     public Th (boolean status, Buffer buffer, int max_prod){
         this.status = status;
         this.buffer = buffer;
@@ -19,12 +21,14 @@ public class Th extends Thread{
     @Override
     public void run() {
         if (status) {
-            for (;;) {
+            while(running) {
                 buffer.produce(random.nextInt(max_prod - 1) + 1, thread_id);
+                count++;
             }
         } else {
-            for (;;) {
+            while(running) {
                 buffer.consume(random.nextInt(max_prod - 1) + 1, thread_id);
+                count++;
             }
         }
     }
