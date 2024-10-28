@@ -1,4 +1,4 @@
-package tw.lab2_d;
+package tw.incorrect_4cond;
 
 
 import java.util.Random;
@@ -22,12 +22,12 @@ public class Th extends Thread{
     public void run() {
         if (status) {
             while(running) {
-                buffer.produce(random.nextInt(max_prod - 1) + 1, thread_id);
+                buffer.produce(random.nextInt(max_prod) + 1, thread_id);
                 count++;
             }
         } else {
             while(running) {
-                buffer.consume(random.nextInt(max_prod - 1) + 1, thread_id);
+                buffer.consume(random.nextInt(max_prod) + 1, thread_id);
                 count++;
             }
         }
