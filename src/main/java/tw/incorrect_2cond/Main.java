@@ -19,12 +19,12 @@ public class Main{
             thread.start();
         }
 
-        threads[sum] = new Th(false, buffer, max_product, 40);
+        threads[sum] = new Th(false, buffer, max_product, 1);
         threads[sum].start();
         sum++;
 
         try {
-            TimeUnit.SECONDS.sleep(30);
+            TimeUnit.SECONDS.sleep(12);
         }
         catch (Exception ignored) {}
 

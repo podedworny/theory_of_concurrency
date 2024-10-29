@@ -18,12 +18,12 @@ public class Main{
             threads[i] = thread;
             thread.start();
         }
-        threads[sum] = new Person(false, buffer, max_product, 40);
+        threads[sum] = new Person(false, buffer, max_product, 10);
         threads[sum].start();
         sum++;
 
         try {
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(120);
         }
         catch (Exception ignored) {}
 

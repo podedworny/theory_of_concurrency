@@ -12,7 +12,7 @@ public class Th extends Thread{
     int count = 0;
     int prod;
     int sum=0;
-    boolean test = true;
+    boolean test = false;
 
     public Th (boolean status, Buffer buffer, int max_size, int prod){
         this.status = status;

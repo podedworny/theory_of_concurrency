@@ -4,10 +4,10 @@ import java.util.concurrent.TimeUnit;
 
 public class Main{
     public static void main(String[] args) {
-        int consumer_count = 10;
+        int consumer_count = 3;
         int producer_count = 1;
         int sum = consumer_count + producer_count;
-        int M = 100;
+        int M = 5;
 
         Buffer buffer = new Buffer(2 * M);
         Th[] threads = new Th[consumer_count + producer_count];

@@ -9,7 +9,7 @@ public class Buffer {
     private final Queue<Integer> queue;
     private final int buffer_size;
 
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock(true);
     private final Condition first_prod = lock.newCondition();
     private final Condition first_cons = lock.newCondition();
     private final Condition next_prod = lock.newCondition();

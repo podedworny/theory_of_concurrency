@@ -27,10 +27,10 @@ public class Buffer {
 
             while (queue.size() + x > buffer_size) first_prod.await();
 
-//            System.out.println("Producer " + thread_id + " produced " + x + " products");
+            System.out.println("Producer " + thread_id + " produced " + x + " products");
 
             for (int i=0; i<x; i++) queue.add(x);
-
+            System.out.println(queue.size());
             next_prod.signal();
             first_cons.signal();
         }
@@ -46,10 +46,10 @@ public class Buffer {
 
             while (queue.size() < x) first_cons.await();
 
-//            System.out.println("Consumer " + thread_id + " consumed " + x + " products");
+            System.out.println("Consumer " + thread_id + " consumed " + x + " products");
 
             for (int i=0; i<x; i++) queue.remove();
-
+            System.out.println(queue.size());
             next_cons.signal();
             first_prod.signal();
         }
