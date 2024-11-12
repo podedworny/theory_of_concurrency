@@ -9,7 +9,7 @@ public class Buffer {
     private final Queue<Integer> queue;
     private final int buffer_size;
 
-    private final ReentrantLock lock = new ReentrantLock(true);
+    private final ReentrantLock lock = new ReentrantLock();
     private final Condition first_prod = lock.newCondition();
     private final Condition first_cons = lock.newCondition();
     private final Condition next_prod = lock.newCondition();
@@ -23,7 +23,7 @@ public class Buffer {
         this.buffer_size = buffer_size;
     }
 
-    public void produce(int x, int thread_id){
+    public void produce(int x){
         lock.lock();
         try {
             while (first_prod_flag) next_prod.await();
@@ -32,8 +32,6 @@ public class Buffer {
                 first_prod_flag = true;
                 first_prod.await();
             }
-
-//            System.out.println("Producer " + thread_id + " produced " + x + " products");
 
             for (int i=0; i<x; i++) queue.add(x);
             first_prod_flag = false;
@@ -48,7 +46,7 @@ public class Buffer {
         }
     }
 
-    public void consume(int x, int thread_id){
+    public void consume(int x){
         lock.lock();
         try {
             while (first_cons_flag) next_cons.await();
@@ -57,8 +55,6 @@ public class Buffer {
                 first_cons_flag = true;
                 first_cons.await();
             }
-
-//            System.out.println("Consumer " + thread_id + " consumed " + x + " products");
 
             for (int i=0; i<x; i++) queue.remove();
 

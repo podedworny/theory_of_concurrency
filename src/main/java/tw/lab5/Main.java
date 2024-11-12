@@ -1,15 +1,16 @@
 package tw.lab5;
 
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) {
         int consumer_count = 5;
-        int producer_count = 6;
+        int producer_count = 1;
         int sum = consumer_count + producer_count;
-        int max_product = 100;
+        int max_product = 50;
         Random random = new Random(42);
 
         Buffer buffer = new Buffer(2*max_product);
@@ -25,7 +26,7 @@ public class Main {
         sum++;
 
         try {
-            TimeUnit.SECONDS.sleep(120);
+            TimeUnit.SECONDS.sleep(60);
         }
         catch (Exception ignored) {}
 
@@ -47,9 +48,23 @@ public class Main {
             } catch (InterruptedException ignored) { }
         }
 
+        int prod_min_time = Arrays.stream(arr3).limit(producer_count).mapToInt(x -> (int) x).min().orElse(-1);
+        int prod_max_time = Arrays.stream(arr3).limit(producer_count).mapToInt(x -> (int) x).max().orElse(-1);
+        int cons_min_time = Arrays.stream(arr3).skip(producer_count).mapToInt(x -> (int) x).min().orElse(-1);
+        int cons_max_time = Arrays.stream(arr3).skip(producer_count).mapToInt(x -> (int) x).max().orElse(-1);
+        int prod_min_count = Arrays.stream(arr).limit(producer_count).min().orElse(-1);
+        int prod_max_count = Arrays.stream(arr).limit(producer_count).max().orElse(-1);
+        int cons_min_count = Arrays.stream(arr).skip(producer_count).min().orElse(-1);
+        int cons_max_count = Arrays.stream(arr).skip(producer_count).max().orElse(-1);
+        int mix_min_time = Math.min(prod_min_time, cons_min_time);
+        int mix_max_time = Math.max(prod_max_time, cons_max_time);
+        int mix_min_count = Math.min(prod_min_count, cons_min_count);
+        int mix_max_count = Math.max(prod_max_count, cons_max_count);
+
         for (int i=0; i<sum;i++){
             if (i < producer_count){
                 System.out.println("Producer " + i + " produced " + arr[i] + " times. Sum: " + arr2[i] + ". Average time: " + arr3[i] + " ns");
+
             }
             else {
                 System.out.println("Consumer " + (i - producer_count) + " consumed " + arr[i] + " times. Sum: " + arr2[i] + ". Average time: " + arr3[i] + " ns");
@@ -57,7 +72,6 @@ public class Main {
             }
         }
 
-        //calculate avarage times of entering monitor and average times of waiting
         long sum1 = 0;
         long sum2 = 0;
         for (int i=0; i<sum;i++){
@@ -66,5 +80,23 @@ public class Main {
         }
         System.out.println("Average count of entering monitor: " + sum1/sum);
         System.out.println("Average time of waiting: " + sum2/sum + " ns");
+        System.out.println("Producer min time: " + prod_min_time + " ns");
+        System.out.println("Producer max time: " + prod_max_time + " ns");
+        System.out.println("Producer difference: " + (prod_max_time - prod_min_time) + " ns");
+        System.out.println("Consumer min time: " + cons_min_time + " ns");
+        System.out.println("Consumer max time: " + cons_max_time + " ns");
+        System.out.println("Consumer difference: " + (cons_max_time - cons_min_time) + " ns");
+        System.out.println("Producer min count: " + prod_min_count);
+        System.out.println("Producer max count: " + prod_max_count);
+        System.out.println("Producer difference: " + (prod_max_count - prod_min_count));
+        System.out.println("Consumer min count: " + cons_min_count);
+        System.out.println("Consumer max count: " + cons_max_count);
+        System.out.println("Consumer difference: " + (cons_max_count - cons_min_count));
+        System.out.println("Min time: " + mix_min_time + " ns");
+        System.out.println("Max time: " + mix_max_time + " ns");
+        System.out.println("Difference: " + (mix_max_time - mix_min_time) + " ns");
+        System.out.println("Min count: " + mix_min_count);
+        System.out.println("Max count: " + mix_max_count);
+        System.out.println("Difference: " + (mix_max_count - mix_min_count));
     }
 }

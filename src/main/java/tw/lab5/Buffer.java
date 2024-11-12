@@ -19,7 +19,7 @@ public class Buffer {
         this.buffer_size = buffer_size;
     }
 
-    public void produce(int x, int thread_id){
+    public void produce(int x){
         lock_prod.lock();
         try {
             lock.lock();
@@ -45,7 +45,7 @@ public class Buffer {
         }
     }
 
-    public void consume(int x, int thread_id){
+    public void consume(int x){
         lock_cons.lock();
         try {
             lock.lock();

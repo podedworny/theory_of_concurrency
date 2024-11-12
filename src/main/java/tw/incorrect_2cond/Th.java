@@ -12,8 +12,8 @@ public class Th extends Thread{
     int count = 0;
     int prod;
     int sum=0;
-    boolean test = false;
-    long time;
+    boolean test = true;
+    long time = 0;
 
     public Th (boolean status, Buffer buffer, int max_size, int prod, Random random){
         this.status = status;

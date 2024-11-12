@@ -8,13 +8,11 @@ public class Person extends Thread {
     int max_prod;
     Random random;
     boolean running = true;
-    static int id = 0;
-    private final int thread_id = id++;
     int count = 0;
     int prod;
     int sum=0;
-    boolean test = false;
-    long time;
+    boolean test = true;
+    long time=0;
 
     public Person (boolean status, Buffer buffer, int max_prod, int prod, Random random){
         this.status = status;
@@ -32,7 +30,7 @@ public class Person extends Thread {
             while (running) {
                 c = test ? prod : random.nextInt(max_prod) + 1;
                 startTime = System.nanoTime();
-                buffer.produce(c, thread_id);
+                buffer.produce(c);
                 time += (System.nanoTime() - startTime);
                 count++;
                 sum+=c;
@@ -41,7 +39,7 @@ public class Person extends Thread {
             while (running) {
                 c = test ? prod : random.nextInt(max_prod) + 1;
                 startTime = System.nanoTime();
-                buffer.consume(c, thread_id);
+                buffer.consume(c);
                 time += (System.nanoTime() - startTime);
                 count++;
                 sum+=c;
