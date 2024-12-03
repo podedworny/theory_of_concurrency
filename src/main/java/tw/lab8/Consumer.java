@@ -11,14 +11,12 @@ public class Consumer implements CSProcess{
     private static int idCounter = 1;
     int id = idCounter++;
     int action_count = 0;
-    Manager manager;
     int rejected_count = 0;
 
-    public Consumer(One2OneChannelInt[] req, One2OneChannelInt[] in, Random random, Manager manager) {
+    public Consumer(One2OneChannelInt[] req, One2OneChannelInt[] in, Random random) {
         this.req = req;
         this.in = in;
         this.random = random;
-        this.manager = manager;
     }
 
     @Override
@@ -26,21 +24,19 @@ public class Consumer implements CSProcess{
         int item;
         int length = in.length;
         while (running) {
-            int random_buffer = manager.getFreeBuffer(random.nextInt(length));
-            if (random_buffer == -1) {
-//                System.out.println("Consumer " + id + " could not find a free buffer");
-                rejected_count++;
-                try {
-                    Thread.sleep(random.nextInt(200)+200);
-                } catch (InterruptedException ignored) {}
-                continue;
-            }
-//            System.out.println("Consumer " + id + " requesting from buffer " + (random_buffer+1));
+            int random_buffer = random.nextInt(length);
+            System.out.println("Consumer " + id + " requesting from buffer " + (random_buffer+1));
             req[random_buffer].out().write(0); // Request data - blocks until data is available
+            System.out.println("Consumer " + id + " requested from buffer " + (random_buffer+1));
             item = in[random_buffer].in().read(); // Read data
-            manager.toggleFreeBuffer(random_buffer);
-//            System.out.println("Consumer " + id + " received " + item + " from buffer " + (random_buffer+1));
-            action_count++;
+            if (item == -1){
+                System.out.println("Consumer " + id + " rejected from buffer " + (random_buffer+1));
+                rejected_count++;
+            }
+            else {
+                System.out.println("Consumer " + id + " received " + item + " from buffer " + (random_buffer+1));
+                action_count++;
+            }
             try {
                 Thread.sleep(random.nextInt(200)+200);
             } catch (InterruptedException ignored) {}

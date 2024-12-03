@@ -5,8 +5,8 @@ import java.util.LinkedList;
 
 
 public class Buffer implements CSProcess{
-    private  One2OneChannelInt req_consumer;
-    private  One2OneChannelInt out_consumer;
+    private  One2OneChannelInt[] req_consumer;
+    private  One2OneChannelInt[] out_consumer;
     private  One2OneChannelInt in_producer;
     private  One2OneChannelInt in_buffer;
     private  One2OneChannelInt out_buffer;
@@ -20,7 +20,7 @@ public class Buffer implements CSProcess{
     int action_count = 0;
     long start_time = 0;
 
-    public Buffer(One2OneChannelInt req, One2OneChannelInt out, One2OneChannelInt in, One2OneChannelInt in_buffer,
+    public Buffer(One2OneChannelInt[] req, One2OneChannelInt[] out, One2OneChannelInt in, One2OneChannelInt in_buffer,
                   One2OneChannelInt out_buffer, One2OneChannelInt in_req_buffer, One2OneChannelInt out_req_buffer, int size) {
         this.req_consumer = req;
         this.out_consumer = out;
@@ -35,21 +35,30 @@ public class Buffer implements CSProcess{
 
     @Override
     public void run() {
-        final Guard[] guards = {req_consumer.in(), in_producer.in(), in_buffer.in()};
+        final Guard[] guards = new Guard[req_consumer.length + 2];
+        for (int i=0; i< req_consumer.length; i++){
+            guards[i] = req_consumer[i].in();
+        }
+        guards[req_consumer.length] = in_producer.in();
+        guards[req_consumer.length + 1] = in_buffer.in();
         final Alternative alt = new Alternative(guards);
 
         while (running){
             int index = alt.fairSelect();
 //            System.out.println("Buffer " + id + " index: " + index + " size: " + buffer_data.size());
-            if (index == 0) { // A Consumer is ready to read
+            if (index < req_consumer.length) { // A Consumer is ready to read
                 if (!buffer_data.isEmpty()) {
-                    req_consumer.in().read();
+                    req_consumer[index].in().read();
                     int item = buffer_data.removeFirst();
-//                    System.out.println("Buffer " + id + " sending "+ item +" data to consumer. " + buffer_data);
-                    out_consumer.out().write(item);
-//                    System.out.println("Buffer " + id + " sent data to consumer. item: "+item  +" "+ buffer_data);
+                    System.out.println("Buffer " + id + " sending "+ item +" data to consumer. " + buffer_data);
+                    out_consumer[index].out().write(item);
+                    System.out.println("Buffer " + id + " sent data to consumer. item: "+item  +" "+ buffer_data);
                 }
-            } else if (index == 1) { // A Producer is ready to send
+                else {
+                    req_consumer[index].in().read();
+                    out_consumer[index].out().write(-1);
+                }
+            } else if (index == req_consumer.length) { // A Producer is ready to send
                 if (buffer_data.size() < size) {
 //                    System.out.println("Buffer " + id + " receiving data from producer " + buffer_data);
                     int item = in_producer.in().read();
@@ -57,7 +66,7 @@ public class Buffer implements CSProcess{
                     action_count++;
 //                    System.out.println("Buffer " + id + " received data from producer " + buffer_data);
                 }
-            } else if (index == 2) { // A buffer is ready to send
+            } else if (index == req_consumer.length+1) { // A buffer is ready to send
                 int item = in_buffer.in().read();
                 if (buffer_data.size() < size) {
 //                    System.out.println("Buffer " + id + " receiving data from buffer " + buffer_data);
