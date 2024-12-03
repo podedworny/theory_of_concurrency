@@ -1,30 +1,31 @@
 package tw.lab8;
 
 import org.jcsp.lang.*;
-// import random
+
 import java.util.Random;
 
 public class Producer implements CSProcess{
     private final One2OneChannelInt channel;
-    private final One2OneChannelInt feedback;
-    private final int max_produce;
-    private final Random random = new Random();
+    Random random;
     boolean running = true;
+    private static int idCounter = 1;
+    int id = idCounter++;
+    int action_count = 0;
 
-    public Producer(One2OneChannelInt out, One2OneChannelInt feedback, int max_produce) {
+    public Producer(One2OneChannelInt out, Random random) {
         this.channel = out;
-        this.feedback = feedback;
-        this.max_produce = max_produce;
+        this.random = random;
     }
+
     @Override
     public void run() {
-        int item, status;
         while (running) {
-            item = random.nextInt(max_produce) + 1;
-            do {
-                channel.out().write(item);
-                status = feedback.in().read();
-            } while (status == 0);
+//            System.out.println("Producer " + id + " producing");
+            channel.out().write(random.nextInt(100000));
+            action_count++;
+            try {
+                Thread.sleep(random.nextInt(200)+200); // Sleep to simulate work
+            } catch (InterruptedException ignored) { }
         }
         channel.out().write(-1);
         System.out.println("Producer ended.");

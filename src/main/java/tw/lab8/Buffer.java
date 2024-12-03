@@ -3,145 +3,89 @@ package tw.lab8;
 import org.jcsp.lang.*;
 import java.util.LinkedList;
 
-enum Status {
-    FIRST, LAST, MIDDLE
-}
 
 public class Buffer implements CSProcess{
-    private  One2OneChannelInt[] req;
-    private  One2OneChannelInt[] in;
-    private  One2OneChannelInt[] out;
-    private One2OneChannelInt in_buffer;
-    private One2OneChannelInt out_buffer;
-    private One2OneChannelInt in_f_buffer;
-    private One2OneChannelInt out_f_buffer;
-    Status status;
+    private  One2OneChannelInt req_consumer;
+    private  One2OneChannelInt out_consumer;
+    private  One2OneChannelInt in_producer;
+    private  One2OneChannelInt in_buffer;
+    private  One2OneChannelInt out_buffer;
+    private One2OneChannelInt in_req_buffer;
+    private One2OneChannelInt out_req_buffer;
     int size;
     boolean running = true;
     LinkedList<Integer> buffer_data = new LinkedList<Integer>();
+    private static int idCounter = 1;
+    int id = idCounter++;
+    int action_count = 0;
+    long start_time = 0;
 
-    public Buffer(One2OneChannelInt[] f1, One2OneChannelInt[] f2, One2OneChannelInt io_buffer, One2OneChannelInt io_f_buffer, Status status, int size){ // first buffer
-        this.size = size;
-        this.status = status;
-        if (status == Status.FIRST) {
-            this.in = f1;
-            this.out = f2;
-            this.out_buffer = io_buffer;
-            this.out_f_buffer = io_f_buffer;
-        } else if (status == Status.LAST) {
-            this.req = f2;
-            this.out = f1;
-            this.in_buffer = io_buffer;
-            this.in_f_buffer = io_f_buffer;
-        }
-    }
-
-    public Buffer(One2OneChannelInt in_buffer, One2OneChannelInt out_buffer, One2OneChannelInt in_f_buffer, One2OneChannelInt out_f_buffer, Status status, int size){ // middle buffer
+    public Buffer(One2OneChannelInt req, One2OneChannelInt out, One2OneChannelInt in, One2OneChannelInt in_buffer,
+                  One2OneChannelInt out_buffer, One2OneChannelInt in_req_buffer, One2OneChannelInt out_req_buffer, int size) {
+        this.req_consumer = req;
+        this.out_consumer = out;
+        this.in_producer = in;
         this.in_buffer = in_buffer;
         this.out_buffer = out_buffer;
-        this.in_f_buffer = in_f_buffer;
-        this.out_f_buffer = out_f_buffer;
-        this.status = status;
         this.size = size;
+        this.in_req_buffer = in_req_buffer;
+        this.out_req_buffer = out_req_buffer;
     }
 
 
     @Override
     public void run() {
-        final Guard[] guards;
-        switch (status) {
-            case FIRST:
-                guards = new Guard[in.length];
-                for (int i = 0; i < in.length; i++) {
-                    guards[i] = in[i].in();
-                }
-                break;
-            case MIDDLE:
-                guards = new Guard[]{in_buffer.in()};
-                break;
-            case LAST:
-                guards = new Guard[req.length + 1];
-                for (int i = 0; i < req.length; i++) {
-                    guards[i] = req[i].in();
-                }
-                guards[req.length] = in_buffer.in();
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + status);
-        }
+        final Guard[] guards = {req_consumer.in(), in_producer.in(), in_buffer.in()};
         final Alternative alt = new Alternative(guards);
 
-        while (running) {
-            int index = alt.select();
-            switch (status) {
-                case FIRST:
-//                    System.out.println("first: " + buffer_data.size());
-                    int item = in[index].in().read();
-                    if (item + buffer_data.size() <= size) {
-                        out[index].out().write(1);
-                        for (int i = 0; i < item; i++) {
-                            buffer_data.add(item);
-                        }
-                    } else {
-                        out[index].out().write(0);
-                        out_buffer.out().write(-1);
-                        int c = out_f_buffer.in().read();
-                        if (c != 0) {
-                            c = Math.min(c, buffer_data.size());
-                            out_buffer.out().write(c);
-                            for (int i = 0; i < c; i++) {
-                                buffer_data.removeFirst();
-                            }
-                        }
-                    }
-                    break;
-                case MIDDLE:
-//                    System.out.println("mid: " + buffer_data.size());
-                    int s = in_buffer.in().read();
-                    if (s == -1)
-                        in_f_buffer.out().write(size - buffer_data.size());
-                    else {
-                        for (int i = 0; i < s; i++) {
-                            buffer_data.add(s);
-                        }
-                    }
-                    if (!buffer_data.isEmpty()) {
-                        out_buffer.out().write(-1);
-                        int c = out_f_buffer.in().read();
-                        if (c != 0) {
-                            c = Math.min(c, buffer_data.size());
-                            out_buffer.out().write(c);
-                            for (int i = 0; i < c; i++) {
-                                buffer_data.removeFirst();
-                            }
-                        }
-                    }
-                    break;
-                case LAST:
-//                    System.out.println("last: " + buffer_data.size());
-                    if (index == req.length) {
-                        int c = in_buffer.in().read();
-                        if (c == -1) {
-                            in_f_buffer.out().write(size - buffer_data.size());
-                        } else {
-                            for (int i = 0; i < c; i++) {
-                                buffer_data.add(c);
-                            }
-                        }
-                    } else {
-                        int c = req[index].in().read();
-                        if (c > buffer_data.size()) {
-                            out[index].out().write(-1);
-                        } else {
-                            out[index].out().write(c);
-                            for (int i = 0; i < c; i++) {
-                                buffer_data.removeFirst();
-                            }
-                        }
-                    }
-
-                    break;
+        while (running){
+            int index = alt.fairSelect();
+//            System.out.println("Buffer " + id + " index: " + index + " size: " + buffer_data.size());
+            if (index == 0) { // A Consumer is ready to read
+                if (!buffer_data.isEmpty()) {
+                    req_consumer.in().read();
+                    int item = buffer_data.removeFirst();
+//                    System.out.println("Buffer " + id + " sending "+ item +" data to consumer. " + buffer_data);
+                    out_consumer.out().write(item);
+//                    System.out.println("Buffer " + id + " sent data to consumer. item: "+item  +" "+ buffer_data);
+                }
+            } else if (index == 1) { // A Producer is ready to send
+                if (buffer_data.size() < size) {
+//                    System.out.println("Buffer " + id + " receiving data from producer " + buffer_data);
+                    int item = in_producer.in().read();
+                    buffer_data.add(item);
+//                    System.out.println("Buffer " + id + " received data from producer " + buffer_data);
+                }
+            } else if (index == 2) { // A buffer is ready to send
+                int item = in_buffer.in().read();
+                if (buffer_data.size() < size) {
+//                    System.out.println("Buffer " + id + " receiving data from buffer " + buffer_data);
+                    buffer_data.add(item);
+                    in_req_buffer.out().write(-1);
+                }
+                else {
+                    in_req_buffer.out().write(0);
+                }
             }
+            if (buffer_data.size() >= (int) (size * 0.8)) {
+                if (start_time == 0) {
+                    start_time = System.currentTimeMillis();
+                }
+                else if (System.currentTimeMillis() - start_time >= 1000) {
+                System.out.println("Buffer " + id + " sending signal to remove data" + buffer_data);
+                    out_buffer.out().write(buffer_data.peek());
+                    int signal = out_req_buffer.in().read();
+                    if (signal == -1) {
+                        buffer_data.removeFirst();
+                    }
+                    start_time = 0;
+                }
+
+            }
+            else{
+                start_time = 0;
+            }
+            if (buffer_data.size() > 0) System.out.println("Buffer " + id + " buffer_data: " + buffer_data);
         }
     }
 }
