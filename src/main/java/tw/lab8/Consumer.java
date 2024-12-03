@@ -12,6 +12,7 @@ public class Consumer implements CSProcess{
     int id = idCounter++;
     int action_count = 0;
     Manager manager;
+    int rejected_count = 0;
 
     public Consumer(One2OneChannelInt[] req, One2OneChannelInt[] in, Random random, Manager manager) {
         this.req = req;
@@ -27,7 +28,11 @@ public class Consumer implements CSProcess{
         while (running) {
             int random_buffer = manager.getFreeBuffer(random.nextInt(length));
             if (random_buffer == -1) {
-                System.out.println("Consumer " + id + " could not find a free buffer");
+//                System.out.println("Consumer " + id + " could not find a free buffer");
+                rejected_count++;
+                try {
+                    Thread.sleep(random.nextInt(200)+200);
+                } catch (InterruptedException ignored) {}
                 continue;
             }
 //            System.out.println("Consumer " + id + " requesting from buffer " + (random_buffer+1));

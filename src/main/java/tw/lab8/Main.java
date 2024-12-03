@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
     private static final int BUFFER_SIZE = 10;
-    private static final int PRODUCER_COUNT = 10;
-    private static final int CONSUMER_COUNT = 10;
+    private static final int PRODUCER_COUNT = 7;
+    private static final int CONSUMER_COUNT = 3;
     private static final int BUFFER_COUNT = PRODUCER_COUNT;
 
     public static void main(String[] args) {
@@ -50,24 +50,30 @@ public class Main {
         Thread thread = new Thread(() -> new Main().ggg(par));
         thread.start();
 
-        for (int i=0; i<10;i++)
-        {
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (Exception ignored) {
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (Exception ignored) {
+        }
+
+        System.out.println("Time's up!");
+
+        for (CSProcess process : processes) {
+            if (process instanceof Consumer) {
+                System.out.println("Consumer " + ((Consumer) process).id + " consumed " + ((Consumer) process).action_count + " items.");
             }
-
-            System.out.println("Time's up!");
-
-            for (CSProcess process : processes) {
-                if (process instanceof Consumer) {
-                    System.out.println("Consumer " + ((Consumer) process).id + " consumed " + ((Consumer) process).action_count + " items.");
-                }
-                if (process instanceof Producer) {
-                    System.out.println("Producer " + ((Producer) process).id + " produced " + ((Producer) process).action_count + " items.");
-                }
+            if (process instanceof Producer) {
+                System.out.println("Producer " + ((Producer) process).id + " produced " + ((Producer) process).action_count + " items.");
+            }
+            if (process instanceof Buffer) {
+                System.out.println("Buffer " + ((Buffer) process).id + " processed " + ((Buffer) process).action_count + " items.");
             }
         }
+        for (CSProcess process : processes){
+            if (process instanceof Consumer){
+                System.out.println("Consumer " + ((Consumer) process).id + " rejected " + ((Consumer) process).rejected_count + " items.");
+            }
+        }
+
 
 
     }
