@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
     private static final int BUFFER_SIZE = 10;
-    private static final int PRODUCER_COUNT = 7;
-    private static final int CONSUMER_COUNT = 3;
+    private static final int PRODUCER_COUNT = 3;
+    private static final int CONSUMER_COUNT = 7;
     private static final int BUFFER_COUNT = PRODUCER_COUNT;
 
     public static void main(String[] args) {
@@ -18,8 +18,9 @@ public class Main {
         One2OneChannelInt[] consumerRequestChannels = new One2OneChannelInt[BUFFER_COUNT];
         One2OneChannelInt[] bufferChannels = new One2OneChannelInt[BUFFER_COUNT];
         One2OneChannelInt[] bufferRequestChannels = new One2OneChannelInt[BUFFER_COUNT];
+        One2OneChannelInt[] managerChannels = new One2OneChannelInt[CONSUMER_COUNT];
+        One2OneChannelInt[] managerRequestChannels = new One2OneChannelInt[CONSUMER_COUNT];
         boolean[] freeBuffer = new boolean[BUFFER_COUNT];
-        Manager manager = new Manager(freeBuffer);
         ArrayList<CSProcess> processes = new ArrayList<CSProcess>();
 
         for (int i = 0; i < PRODUCER_COUNT; i++) {
@@ -35,8 +36,14 @@ public class Main {
             bufferRequestChannels[i] = Channel.one2oneInt();
         }
 
+        for (int i=0; i<CONSUMER_COUNT; i++){
+            managerChannels[i] = Channel.one2oneInt();
+            managerRequestChannels[i] = Channel.one2oneInt();
+        }
+
+        processes.add(new Manager(freeBuffer, managerChannels, managerRequestChannels));
         for (int i = 0; i < CONSUMER_COUNT; i++) {
-            processes.add(new Consumer(consumerRequestChannels, consumerChannels, random, manager));
+            processes.add(new Consumer(consumerRequestChannels, consumerChannels, random, managerChannels[i], managerRequestChannels[i]));
         }
 
         for (int i = 1; i < BUFFER_COUNT; i++) {
@@ -51,7 +58,7 @@ public class Main {
         thread.start();
 
         try {
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(60);
         } catch (Exception ignored) {
         }
 
