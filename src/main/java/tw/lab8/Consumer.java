@@ -32,18 +32,15 @@ public class Consumer implements CSProcess{
             managerChannels.out().write(random_buffer);
             random_buffer = managerRequestChannels.in().read();
             if (random_buffer == -1) {
-                System.out.println("Consumer " + id + " could not find a free buffer");
                 rejected_count++;
                 try {
                     Thread.sleep(random.nextInt(200)+200);
                 } catch (InterruptedException ignored) {}
                 continue;
             }
-//            System.out.println("Consumer " + id + " requesting from buffer " + (random_buffer+1));
             req[random_buffer].out().write(0); // Request data - blocks until data is available
             item = in[random_buffer].in().read(); // Read data
             managerChannels.out().write(-1*random_buffer-1);
-//            System.out.println("Consumer " + id + " received " + item + " from buffer " + (random_buffer+1));
             action_count++;
             try {
                 Thread.sleep(random.nextInt(200)+200);

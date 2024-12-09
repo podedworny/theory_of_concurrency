@@ -47,7 +47,7 @@ public class Manager implements CSProcess {
             int index = alt.select();
             int i = managerChannels[index].in().read();
             if (i >= 0) {
-                i = getFreeBuffer(index);
+                i = getFreeBuffer(i);
                 managerRequestChannels[index].out().write(i);
             }
             else {

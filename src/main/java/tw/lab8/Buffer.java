@@ -40,27 +40,21 @@ public class Buffer implements CSProcess{
 
         while (running){
             int index = alt.fairSelect();
-//            System.out.println("Buffer " + id + " index: " + index + " size: " + buffer_data.size());
             if (index == 0) { // A Consumer is ready to read
                 if (!buffer_data.isEmpty()) {
                     req_consumer.in().read();
                     int item = buffer_data.removeFirst();
-//                    System.out.println("Buffer " + id + " sending "+ item +" data to consumer. " + buffer_data);
                     out_consumer.out().write(item);
-//                    System.out.println("Buffer " + id + " sent data to consumer. item: "+item  +" "+ buffer_data);
                 }
             } else if (index == 1) { // A Producer is ready to send
                 if (buffer_data.size() < size) {
-//                    System.out.println("Buffer " + id + " receiving data from producer " + buffer_data);
                     int item = in_producer.in().read();
                     buffer_data.add(item);
                     action_count++;
-//                    System.out.println("Buffer " + id + " received data from producer " + buffer_data);
                 }
             } else if (index == 2) { // A buffer is ready to send
                 int item = in_buffer.in().read();
                 if (buffer_data.size() < size) {
-//                    System.out.println("Buffer " + id + " receiving data from buffer " + buffer_data);
                     buffer_data.add(item);
                     action_count++;
                     in_req_buffer.out().write(-1);
@@ -74,7 +68,6 @@ public class Buffer implements CSProcess{
                     start_time = System.currentTimeMillis();
                 }
                 else if (System.currentTimeMillis() - start_time >= 1000) {
-//                System.out.println("Buffer " + id + " sending signal to remove data" + buffer_data);
                     out_buffer.out().write(buffer_data.peek());
                     int signal = out_req_buffer.in().read();
                     if (signal == -1) {
@@ -87,7 +80,6 @@ public class Buffer implements CSProcess{
             else{
                 start_time = 0;
             }
-//            if (buffer_data.size() > 0) System.out.println("Buffer " + id + " buffer_data: " + buffer_data);
         }
     }
 }
