@@ -3,7 +3,6 @@ package tw.lab8;
 import org.jcsp.lang.*;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class Main {
     private static final int BUFFER_SIZE = 10;
@@ -18,8 +17,9 @@ public class Main {
         One2OneChannelInt[] consumerRequestChannels = new One2OneChannelInt[BUFFER_COUNT];
         One2OneChannelInt[] bufferChannels = new One2OneChannelInt[BUFFER_COUNT];
         One2OneChannelInt[] bufferRequestChannels = new One2OneChannelInt[BUFFER_COUNT];
+        One2OneChannelInt[] managerChannels = new One2OneChannelInt[CONSUMER_COUNT];
+        One2OneChannelInt[] managerRequestChannels = new One2OneChannelInt[CONSUMER_COUNT];
         boolean[] freeBuffer = new boolean[BUFFER_COUNT];
-        Manager manager = new Manager(freeBuffer);
         ArrayList<CSProcess> processes = new ArrayList<CSProcess>();
 
         for (int i = 0; i < PRODUCER_COUNT; i++) {
@@ -36,48 +36,23 @@ public class Main {
         }
 
         for (int i = 0; i < CONSUMER_COUNT; i++) {
-            processes.add(new Consumer(consumerRequestChannels, consumerChannels, random, manager));
+            managerChannels[i] = Channel.one2oneInt();
+            managerRequestChannels[i] = Channel.one2oneInt();
+        }
+
+        processes.add(new Manager(freeBuffer, managerChannels, managerRequestChannels));
+        for (int i = 0; i < CONSUMER_COUNT; i++) {
+            processes.add(new Consumer(consumerRequestChannels, consumerChannels, random, managerChannels[i], managerRequestChannels[i]));
         }
 
         for (int i = 1; i < BUFFER_COUNT; i++) {
-            processes.add(new Buffer(consumerRequestChannels[i], consumerChannels[i], producerChannels[i], bufferChannels[i-1],
-                    bufferChannels[i], bufferRequestChannels[i-1], bufferRequestChannels[i], BUFFER_SIZE));
+            processes.add(new Buffer(consumerRequestChannels[i], consumerChannels[i], producerChannels[i], bufferChannels[i - 1],
+                    bufferChannels[i], bufferRequestChannels[i - 1], bufferRequestChannels[i], BUFFER_SIZE));
         }
-        processes.add(new Buffer(consumerRequestChannels[0], consumerChannels[0], producerChannels[0], bufferChannels[BUFFER_COUNT-1],
-                bufferChannels[0], bufferRequestChannels[BUFFER_COUNT-1], bufferRequestChannels[0], BUFFER_SIZE));
+        processes.add(new Buffer(consumerRequestChannels[0], consumerChannels[0], producerChannels[0], bufferChannels[BUFFER_COUNT - 1],
+                bufferChannels[0], bufferRequestChannels[BUFFER_COUNT - 1], bufferRequestChannels[0], BUFFER_SIZE));
 
         Parallel par = new Parallel(processes.toArray(new CSProcess[0]));
-        Thread thread = new Thread(() -> new Main().ggg(par));
-        thread.start();
-
-        try {
-            TimeUnit.SECONDS.sleep(10);
-        } catch (Exception ignored) {
-        }
-
-        System.out.println("Time's up!");
-
-        for (CSProcess process : processes) {
-            if (process instanceof Consumer) {
-                System.out.println("Consumer " + ((Consumer) process).id + " consumed " + ((Consumer) process).action_count + " items.");
-            }
-            if (process instanceof Producer) {
-                System.out.println("Producer " + ((Producer) process).id + " produced " + ((Producer) process).action_count + " items.");
-            }
-            if (process instanceof Buffer) {
-                System.out.println("Buffer " + ((Buffer) process).id + " processed " + ((Buffer) process).action_count + " items.");
-            }
-        }
-        for (CSProcess process : processes){
-            if (process instanceof Consumer){
-                System.out.println("Consumer " + ((Consumer) process).id + " rejected " + ((Consumer) process).rejected_count + " items.");
-            }
-        }
-
-
-
-    }
-    public void ggg(Parallel par) {
         par.run();
     }
 }
